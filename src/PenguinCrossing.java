@@ -249,7 +249,7 @@ public class PenguinCrossing extends JApplet implements Runnable, KeyListener, A
     xbad = 0;
    } else {
     try {
-     Thread.sleep(40 L);
+     Thread.sleep(40L);
     } catch (Exception e) {
      // TODO Auto-generated catch block
      e.printStackTrace();
@@ -277,7 +277,7 @@ public class PenguinCrossing extends JApplet implements Runnable, KeyListener, A
     xbad2 = 500;
    } else {
     try {
-     Thread.sleep(12 L);
+     Thread.sleep(12L);
     } catch (Exception e) {
      // TODO Auto-generated catch block
      e.printStackTrace();
@@ -299,7 +299,7 @@ public class PenguinCrossing extends JApplet implements Runnable, KeyListener, A
     xbad3 = 0;
    } else {
     try {
-     Thread.sleep(20 L);
+     Thread.sleep(20L);
     } catch (Exception e) {
      // TODO Auto-generated catch block
      e.printStackTrace();
@@ -321,7 +321,7 @@ public class PenguinCrossing extends JApplet implements Runnable, KeyListener, A
     xbad4 = 0;
    } else {
     try {
-     Thread.sleep(12 L);
+     Thread.sleep(12L);
     } catch (Exception e) {
      // TODO Auto-generated catch block
      e.printStackTrace();
@@ -343,7 +343,7 @@ public class PenguinCrossing extends JApplet implements Runnable, KeyListener, A
     xbad5 = 500;
    } else {
     try {
-     Thread.sleep(8 L);
+     Thread.sleep(8L);
     } catch (Exception e) {
      // TODO Auto-generated catch block
      e.printStackTrace();
