@@ -13,17 +13,19 @@ import java.awt.event.KeyListener;
 @SuppressWarnings("serial")
 
 public class PenguinCrossing extends JApplet implements Runnable, KeyListener, ActionListener {
+	// Flag to determine if running as desktop app or applet
+	private boolean runningAsApplication = false;
 
 
 	//Declare strings for the images we will be using on the labels(characters) and background images
-	private String fella = "penguin.png",
-	fella2 = "pengwin.png",
-	evil = "baddie.png",
-	evil2 = "baddie2.png",
-	evil3 = "baddie2flipped.png",
-	boss = "baddie3flipped.png",
-	end = "winpic.jpg",
-	title = "title.jpg";;
+	private String fella = "src/assets/sprites/penguin.png",
+	fella2 = "src/assets/sprites/pengwin.png",
+	evil = "src/assets/sprites/baddie.png",
+	evil2 = "src/assets/sprites/baddie2.png",
+	evil3 = "src/assets/sprites/baddie2flipped.png",
+	boss = "src/assets/sprites/baddie3flipped.png",
+	end = "src/assets/winpic.jpg",
+	title = "src/assets/title.jpg";;
 
 	//Declare audioclips that will be assigned later 
 	AudioClip audioClip1,
@@ -80,9 +82,20 @@ public class PenguinCrossing extends JApplet implements Runnable, KeyListener, A
 
 	//Assign the first audio clip and start it looping
 
-	audioClip6 = getAudioClip(getCodeBase(), "break1.wav");
-
-	audioClip6.loop();
+	try {
+		if (runningAsApplication) {
+			// Desktop mode - load audio from file system
+			System.out.println("Loading title music for desktop mode");
+			audioClip6 = Applet.newAudioClip(new java.io.File("src/assets/music/break1.wav").toURI().toURL());
+		} else {
+			// Applet mode - use getCodeBase
+			audioClip6 = getAudioClip(getCodeBase(), "break1.wav");
+		}
+		audioClip6.loop();
+	} catch (Exception e) {
+		System.out.println("Failed to load title music: " + e.getMessage());
+		e.printStackTrace();
+	}
 
 	//Set the size of the title screen window
 	//Setup a new flow layout so our title pic and start button are shown
@@ -104,22 +117,57 @@ public class PenguinCrossing extends JApplet implements Runnable, KeyListener, A
 	* The original audio loop is stopped and a new one begins
 	*/
 	public void actionPerformed(ActionEvent evt) {
-	if (evt.getSource() instanceof JButton)
+		if (evt.getSource() instanceof JButton)
 
-		if (evt.getSource() == bStart) {
+			if (evt.getSource() == bStart) {
+				// Load audio files based on application mode
+				try {
+					if (runningAsApplication) {
+						// Desktop mode - load audio from file system
+						System.out.println("Loading game audio for desktop mode");
+						audioClip1 = Applet.newAudioClip(new java.io.File("src/assets/music/zen.wav").toURI().toURL());
+						audioClip2 = Applet.newAudioClip(new java.io.File("src/assets/music/howweroll.wav").toURI().toURL());
+						audioClip3 = Applet.newAudioClip(new java.io.File("src/assets/sfx/fail.wav").toURI().toURL());
+						audioClip4 = Applet.newAudioClip(new java.io.File("src/assets/sfx/applause.wav").toURI().toURL());
+						audioClip5 = Applet.newAudioClip(new java.io.File("src/assets/sfx/applause.wav").toURI().toURL());
+						audioClip6 = Applet.newAudioClip(new java.io.File("src/assets/music/break1.wav").toURI().toURL());
+					} else {
+						// Applet mode - use getCodeBase
+						audioClip1 = getAudioClip(getCodeBase(), "zen.wav");
+						audioClip2 = getAudioClip(getCodeBase(), "howweroll.wav");
+						audioClip3 = getAudioClip(getCodeBase(), "fail.wav");
+						audioClip4 = getAudioClip(getCodeBase(), "applause.wav");
+						audioClip5 = getAudioClip(getCodeBase(), "applause.wav");
+						audioClip6 = getAudioClip(getCodeBase(), "break1.wav");
+					}
+				} catch (Exception e) {
+					System.out.println("Failed to load game audio: " + e.getMessage());
+					e.printStackTrace();
+				}
 
+				bStart.setVisible(false);
+				titlepic.setVisible(false);
+				audioClip6.stop();
+				audioClip1.loop();
 
-			audioClip1 = getAudioClip(getCodeBase(), "zen.wav");
-			audioClip2 = getAudioClip(getCodeBase(), "howweroll.wav");
-			audioClip3 = getAudioClip(getCodeBase(), "fail.wav");
-			audioClip4 = getAudioClip(getCodeBase(), "applause.wav");
-			audioClip5 = getAudioClip(getCodeBase(), "applause.wav");
-			audioClip6 = getAudioClip(getCodeBase(), "break1.wav");
+				/*
+				 * Set the size of the playing screen, the layout and the background color
+				 * Layout is null because we want the objects to be able to move freely around the screen
+				 */
+				this.setSize(500, 700);
+				this.setFocusable(true);
+				this.requestFocusInWindow();
+				addKeyListener(this);
+				content.setLayout(null);
+				content.setBackground(Color.CYAN);
+				// addKeyListener(this);
+				content.setFocusable(true);
 
-			bStart.setVisible(false);
-			titlepic.setVisible(false);
-			audioClip6.stop();
-			audioClip1.loop();
+				// Add the main character and each of the enemy characters, set them enabled and give them sizes
+				content.add(thedude);
+				thedude.setEnabled(true);
+				thedude.setSize(50, 50);
+				thedude.setLocation(x, y);
 
 
 
@@ -567,7 +615,21 @@ public class PenguinCrossing extends JApplet implements Runnable, KeyListener, A
 	// Put your code here
 	}
 
-
-
-
+	/**
+	 * Main method to run the application as a desktop app instead of an applet
+	 */
+	public static void main(String[] args) {
+		JFrame frame = new JFrame("Penguin Crossing");
+		PenguinCrossing applet = new PenguinCrossing();
+		applet.runningAsApplication = true; // Set BEFORE init()
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setSize(500, 700);
+		frame.setContentPane(applet.getContentPane());
+		applet.init(); // Call the applet's init method
+		frame.setVisible(true);
+		// Add KeyListener for desktop mode
+		frame.addKeyListener(applet);
+		frame.setFocusable(true);
+		frame.requestFocus();
+	}
 }
