@@ -3,37 +3,38 @@ import java.awt.event.*;
 import java.applet.*;
 import javax.swing.*;
 
+import java.applet.Applet;
+import java.applet.AudioClip;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-
-
-
+import java.io.File;
 
 @SuppressWarnings("serial")
 
 public class PenguinCrossing extends JApplet implements Runnable, KeyListener, ActionListener {
-
+	// Flag to determine if running as desktop app or applet
+	private boolean runningAsApplication = false;
 
 	//Declare strings for the images we will be using on the labels(characters) and background images
-	private String fella = "penguin.png",
-	fella2 = "pengwin.png",
-	evil = "baddie.png",
-	evil2 = "baddie2.png",
-	evil3 = "baddie2flipped.png",
-	boss = "baddie3flipped.png",
-	end = "winpic.jpg",
-	title = "title.jpg";;
+	private String fella = "src/assets/sprites/penguin.png",
+	fella2 = "src/assets/sprites/pengwin.png",
+	evil = "src/assets/sprites/baddie.png",
+	evil2 = "src/assets/sprites/baddie2.png",
+	evil3 = "src/assets/sprites/baddie2flipped.png",
+	boss = "src/assets/sprites/baddie3flipped.png",
+	end = "src/assets/winpic.jpg",
+	title = "src/assets/title.jpg";;
 
-	//Declare audioclips that will be assigned later 
-	AudioClip audioClip1,
-	audioClip2,
-	audioClip3,
-	audioClip4,
-	audioClip5,
-	audioClip6;
-
-
+	//Declare audio file paths
+	private String musicZen = "src/assets/music/zen.wav",
+	musicHowWeRoll = "src/assets/music/howweroll.wav",
+	musicBreak1 = "src/assets/music/break1.wav",
+	sfxFail = "src/assets/sfx/fail.wav",
+	sfxApplause = "src/assets/sfx/applause.wav";
+	
+	//Declare audioclip for current playing music
+	private AudioClip currentMusic;
 
 	//Selected images are applied to labels which will be our on screen characters 
 	//and our title and win screens
@@ -47,7 +48,6 @@ public class PenguinCrossing extends JApplet implements Runnable, KeyListener, A
 	private JLabel titlepic = new JLabel(new ImageIcon(title));
 	private JLabel winpic = new JLabel(new ImageIcon(end));
 
-
 	//Declare a button to start the game from the main page
 	private JButton bStart = new JButton("Start Game");
 
@@ -55,6 +55,44 @@ public class PenguinCrossing extends JApplet implements Runnable, KeyListener, A
 	private Container titlescreen = getContentPane(),
 	content = getContentPane();
 
+	// Audio management methods
+
+	private void playMusic(String musicPath) {
+		stopMusic();
+		try {
+			currentMusic = loadAudioClip(musicPath);
+			currentMusic.loop();
+		} catch (Exception e) {
+			System.out.println("Failed to play music: " + e.getMessage());
+		}
+	}
+
+	private void playSound(String audioPath) {
+		try {
+			AudioClip clip = loadAudioClip(audioPath);
+			clip.play();
+		} catch (Exception e) {
+			System.out.println("Failed to play sound: " + e.getMessage());
+		}
+	}
+
+	private void stopMusic() {
+		if (currentMusic != null) {
+			currentMusic.stop();
+		}
+	}
+
+	private AudioClip loadAudioClip(String audioPath) throws Exception {
+		if (runningAsApplication) {
+			// Desktop mode - load from file system
+			return Applet.newAudioClip(new File(audioPath).toURI().toURL());
+		} else {
+			// Applet mode - use getCodeBase
+			// Extract just the filename from the path
+			String fileName = audioPath.substring(audioPath.lastIndexOf("/") + 1);
+			return getAudioClip(getCodeBase(), fileName);
+		}
+	}
 
 	//A separate window for a winning screen, probably could have used a container as well
 	private JFrame winScreen = new JFrame("The End");
@@ -74,29 +112,22 @@ public class PenguinCrossing extends JApplet implements Runnable, KeyListener, A
 	TFB4 = "",
 	TFB5 = "";
 
-
-
 	public void init() {
 
-	//Assign the first audio clip and start it looping
+		//Play the title screen music
+		playMusic(musicBreak1);
 
-	audioClip6 = getAudioClip(getCodeBase(), "break1.wav");
+		//Set the size of the title screen window
+		//Setup a new flow layout so our title pic and start button are shown
 
-	audioClip6.loop();
+		this.setSize(500, 700);
+		titlescreen.setLayout(new FlowLayout());
+		titlescreen.setBackground(Color.BLACK);
 
-	//Set the size of the title screen window
-	//Setup a new flow layout so our title pic and start button are shown
-
-	this.setSize(500, 700);
-	titlescreen.setLayout(new FlowLayout());
-	titlescreen.setBackground(Color.BLACK);
-
-	//Add the picture and start button, add an action listener for the button
-	titlescreen.add(titlepic);
-	titlescreen.add(bStart);
-	bStart.addActionListener(this);
-
-
+		//Add the picture and start button, add an action listener for the button
+		titlescreen.add(titlepic);
+		titlescreen.add(bStart);
+		bStart.addActionListener(this);
 	}
 
 	/*The action listener for the buttons controls the start of everything in 
@@ -104,22 +135,34 @@ public class PenguinCrossing extends JApplet implements Runnable, KeyListener, A
 	* The original audio loop is stopped and a new one begins
 	*/
 	public void actionPerformed(ActionEvent evt) {
-	if (evt.getSource() instanceof JButton)
+		if (evt.getSource() instanceof JButton)
 
-		if (evt.getSource() == bStart) {
+			if (evt.getSource() == bStart) {
+				// Hide title screen elements
+				bStart.setVisible(false);
+				titlepic.setVisible(false);
+				
+				// Switch from title music to game music
+				playMusic(musicZen);
 
+				/*
+				 * Set the size of the playing screen, the layout and the background color
+				 * Layout is null because we want the objects to be able to move freely around the screen
+				 */
+				this.setSize(500, 700);
+				this.setFocusable(true);
+				this.requestFocusInWindow();
+				addKeyListener(this);
+				content.setLayout(null);
+				content.setBackground(Color.CYAN);
+				// addKeyListener(this);
+				content.setFocusable(true);
 
-			audioClip1 = getAudioClip(getCodeBase(), "zen.wav");
-			audioClip2 = getAudioClip(getCodeBase(), "howweroll.wav");
-			audioClip3 = getAudioClip(getCodeBase(), "fail.wav");
-			audioClip4 = getAudioClip(getCodeBase(), "applause.wav");
-			audioClip5 = getAudioClip(getCodeBase(), "applause.wav");
-			audioClip6 = getAudioClip(getCodeBase(), "break1.wav");
-
-			bStart.setVisible(false);
-			titlepic.setVisible(false);
-			audioClip6.stop();
-			audioClip1.loop();
+				// Add the main character and each of the enemy characters, set them enabled and give them sizes
+				content.add(thedude);
+				thedude.setEnabled(true);
+				thedude.setSize(50, 50);
+				thedude.setLocation(x, y);
 
 
 
@@ -194,13 +237,11 @@ public class PenguinCrossing extends JApplet implements Runnable, KeyListener, A
 	public void run() {
 	/*Makes use of the threads by initiating the animation controls inside moveBaddy functions. Sets the xbad and ybad variables to
 	give them a starting location. */
-
 	
 		if (TFB1.equals("not tripped")) {
 			TFB1 = "tripped";
 			xbad = 50;
 			ybad = 150;
-			System.out.println("here2");
 			moveBaddy();
 		}
 
@@ -208,28 +249,24 @@ public class PenguinCrossing extends JApplet implements Runnable, KeyListener, A
 			TFB2 = "tripped";
 			xbad2 = 75;
 			ybad2 = 250;
-			System.out.println("here3");
 			moveBaddy2();
 		}
 		if (TFB3.equals("not tripped")) {
 			TFB3 = "tripped";
 			xbad3 = 100;
 			ybad3 = 350;
-			System.out.println("here4");
 			moveBaddy3();
 		}
 		if (TFB4.equals("not tripped")) {
 			TFB4 = "tripped";
 			xbad4 = 125;
 			ybad4 = 450;
-			System.out.println("here5");
 			moveBaddy4();
 		}
 		if (TFB5.equals("not tripped")) {
 			TFB5 = "tripped";
 			xbad5 = 125;
 			ybad5 = 540;
-			System.out.println("here6");
 			moveBaddy5();
 		}
 
@@ -374,8 +411,8 @@ public class PenguinCrossing extends JApplet implements Runnable, KeyListener, A
 		{
 			System.out.println("Collision with baddie1");
 			collisionflag = 1;
-			audioClip1.stop();
-			audioClip3.play();
+			stopMusic();
+			playSound(sfxFail);
 			JOptionPane.showMessageDialog(null, "Game Over.");
 			System.exit(0);
 		}
@@ -392,8 +429,8 @@ public class PenguinCrossing extends JApplet implements Runnable, KeyListener, A
 		{
 			System.out.println("Collision with baddie2");
 			collisionflag = 1;
-			audioClip1.stop();
-			audioClip3.play();
+			stopMusic();
+			playSound(sfxFail);
 			JOptionPane.showMessageDialog(null, "Game Over.");
 			System.exit(0);
 		}
@@ -410,8 +447,8 @@ public class PenguinCrossing extends JApplet implements Runnable, KeyListener, A
 		{
 			System.out.println("Collision with baddie3");
 			collisionflag = 1;
-			audioClip1.stop();
-			audioClip3.play();
+			stopMusic();
+			playSound(sfxFail);
 			JOptionPane.showMessageDialog(null, "Game Over.");
 			System.exit(0);
 		}
@@ -428,8 +465,8 @@ public class PenguinCrossing extends JApplet implements Runnable, KeyListener, A
 		{
 			System.out.println("Collision with baddie4");
 			collisionflag = 1;
-			audioClip1.stop();
-			audioClip3.play();
+			stopMusic();
+			playSound(sfxFail);
 			JOptionPane.showMessageDialog(null, "Game Over.");
 			System.exit(0);
 		}
@@ -446,8 +483,8 @@ public class PenguinCrossing extends JApplet implements Runnable, KeyListener, A
 		{
 			System.out.println("Collision with baddie5");
 			collisionflag = 1;
-			audioClip1.stop();
-			audioClip3.play();
+			stopMusic();
+			playSound(sfxFail);
 			JOptionPane.showMessageDialog(null, "Game Over.");
 			System.exit(0);
 		}
@@ -480,8 +517,8 @@ public class PenguinCrossing extends JApplet implements Runnable, KeyListener, A
 			*  Collision flag is used to stop the enemies from moving 
 			*/
 
-			audioClip1.stop();
-			audioClip4.play();
+			stopMusic();
+			playSound(sfxApplause);
 			collisionflag = 1;
 
 			//Display a win message
@@ -502,7 +539,7 @@ public class PenguinCrossing extends JApplet implements Runnable, KeyListener, A
 			winpic.setLocation(0, 0);
 
 
-			audioClip2.loop();
+			playMusic(musicHowWeRoll);
 		}
 	}
 
@@ -514,60 +551,56 @@ public class PenguinCrossing extends JApplet implements Runnable, KeyListener, A
 
 	public void keyPressed(KeyEvent e) {
 
-	int key = e.getKeyCode();
+		int key = e.getKeyCode();
 
 
-	if (key == KeyEvent.VK_LEFT) {
-		System.out.println("KeyLeft");
-		thedude.setLocation((x -= 4), y);
+		if (key == KeyEvent.VK_LEFT) {
+			thedude.setLocation((x -= 4), y);
+		}
 
+		if (key == KeyEvent.VK_RIGHT) {
+			thedude.setLocation((x += 4), y);
+		}
+
+		if (key == KeyEvent.VK_UP) {
+			thedude.setLocation(x, (y -= 4));
+		}
+
+		if (key == KeyEvent.VK_DOWN) {
+			thedude.setLocation(x, (y += 4));
+		}
 	}
 
-	if (key == KeyEvent.VK_RIGHT) {
-		System.out.println("KeyRight");
-		thedude.setLocation((x += 4), y);
-
-
-	}
-
-	if (key == KeyEvent.VK_UP) {
-		thedude.setLocation(x, (y -= 4));
-
-	}
-
-	if (key == KeyEvent.VK_DOWN) {
-		thedude.setLocation(x, (y += 4));
-
-	}
-
-	}
-	@Override
 	public void keyReleased(KeyEvent e) {
-	// TODO Auto-generated method stub
-
+		// Required by KeyListener interface
 	}
 
-
-
-
-	@Override
 	public void keyTyped(KeyEvent e) {
-	// TODO Auto-generated method stub
-
+		// Required by KeyListener interface
 	}
-
-
-
 
 	public void stop() {
-	// Put your code here
 	}
 
 	public void destroy() {
 	// Put your code here
 	}
 
-
-
-
+	/**
+	 * Main method to run the application as a desktop app instead of an applet
+	 */
+	public static void main(String[] args) {
+		JFrame frame = new JFrame("Penguin Crossing");
+		PenguinCrossing applet = new PenguinCrossing();
+		applet.runningAsApplication = true; // Set BEFORE init()
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setSize(500, 700);
+		frame.setContentPane(applet.getContentPane());
+		applet.init(); // Call the applet's init method
+		frame.setVisible(true);
+		// Add KeyListener for desktop mode
+		frame.addKeyListener(applet);
+		frame.setFocusable(true);
+		frame.requestFocus();
+	}
 }
